@@ -111,7 +111,7 @@ public class ProxyServlet extends HttpServlet {
      * @param properties The configuration (or none) obtained from the container
      */
     @Activate
-    public void activate(final Map<String, ?> properties) {
+    protected void activate(final Map<String, ?> properties) {
         configure(properties);
         log.log(LogService.LOG_INFO, "Service configured.");
     }
@@ -123,7 +123,7 @@ public class ProxyServlet extends HttpServlet {
      * container.
      */
     @Modified
-    void modified(final Map<String, ?> properties) {
+    protected void modified(final Map<String, ?> properties) {
         configure(properties);
         log.log(LogService.LOG_INFO, "Configuration modified.");
     }
@@ -132,7 +132,7 @@ public class ProxyServlet extends HttpServlet {
      * DS-binding called when the service is deactivated.
      */
     @Deactivate
-    public void deactivate() {
+    protected void deactivate() {
         configure(null);
         log.log(LogService.LOG_INFO, "Service deconfigured.");
     }
