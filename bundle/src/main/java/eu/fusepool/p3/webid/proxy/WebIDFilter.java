@@ -16,6 +16,10 @@
 package eu.fusepool.p3.webid.proxy;
 
 import java.io.IOException;
+import java.security.cert.CertificateParsingException;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -85,7 +89,7 @@ public class WebIDFilter implements Filter {
      */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        if(!(request instanceof HttpServletRequest)) {
+        if (!(request instanceof HttpServletRequest)) {
             // FIXME what behavior when we don't get a HTTP-request?
             // or do we anyways always get an HttpServletRequest because the
             // filtered servlet is a HttpServlet?
@@ -94,6 +98,16 @@ public class WebIDFilter implements Filter {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             log(LogService.LOG_INFO, "Filtering request: " + httpRequest.getRemoteAddr() + ":" + httpRequest.getRemotePort()
                     + " (" + httpRequest.getHeader("Host") + ") " + httpRequest.getMethod() + " " + httpRequest.getRequestURI());
+
+            try {
+                String[] webIdUris = extractWebIdUris((X509Certificate[]) httpRequest.getAttribute("javax.servlet.request.X509Certificate"));
+                for (String uri : webIdUris) {
+                    log.log(LogService.LOG_INFO, "Found WebID: " + uri);
+                }
+            } catch (CertificateParsingException ex) {
+                // FIXME error-handling
+                ex.printStackTrace();
+            }
 
             chain.doFilter(request, response);
         }
@@ -112,5 +126,19 @@ public class WebIDFilter implements Filter {
         if (log != null) {
             log.log(level, message);
         }
+    }
+
+    private String[] extractWebIdUris(X509Certificate[] certs) throws CertificateParsingException {
+        String[] uris = {};
+        final ArrayList<String> webIdUris = new ArrayList<>(5);
+        if (certs != null && certs.length > 0) {
+            for (List<?> entry : certs[0].getSubjectAlternativeNames()) {
+                if ((Integer) entry.get(0) == 6) {
+                    webIdUris.add((String) entry.get(1));
+                }
+            }
+            uris = webIdUris.toArray(uris);
+        }
+        return uris;
     }
 }

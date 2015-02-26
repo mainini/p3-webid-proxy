@@ -20,13 +20,8 @@ import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.security.cert.CertificateParsingException;
-import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.servlet.Servlet;
@@ -60,7 +55,7 @@ import org.osgi.service.log.LogService;
  * @author Pascal Mainini
  */
 // refer to https://felix.apache.org/documentation/subprojects/apache-felix-http-service.html
-@Component(service = Servlet.class, property = {"alias=/proxy", "TargetBaseURI=http://localhost:8088"})
+@Component(service = Servlet.class, property = {"alias=/proxy", "TargetBaseURI=http://localhost:8082"})
 @SuppressWarnings("serial")
 public class ProxyServlet extends HttpServlet {
 
@@ -155,27 +150,6 @@ public class ProxyServlet extends HttpServlet {
             throws ServletException, IOException {
         log.log(LogService.LOG_INFO, "Proxying request: " + frontendRequest.getRemoteAddr() + ":" + frontendRequest.getRemotePort()
                 + " (" + frontendRequest.getHeader("Host") + ") " + frontendRequest.getMethod() + " " + frontendRequest.getRequestURI());
-
-        X509Certificate certChain[] = (X509Certificate[]) frontendRequest.getAttribute("javax.servlet.request.X509Certificate");
-        ArrayList<String> webIdUris = new ArrayList<>();
-        if (certChain != null) {
-            for(X509Certificate cert : certChain) {
-                try {
-                    Collection<List<?>> altNames = cert.getSubjectAlternativeNames();
-                    for(List<?> entry : altNames) {
-                        if((Integer) entry.get(0) == 6) {
-                            webIdUris.add((String) entry.get(1));
-                        }
-                    }
-                } catch (CertificateParsingException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
-
-        for(String uri : webIdUris) {
-            log.log(LogService.LOG_INFO, "Found WebID: " + uri);
-        }
 
         if (targetBaseUri == null) {
             // FIXME return status page
