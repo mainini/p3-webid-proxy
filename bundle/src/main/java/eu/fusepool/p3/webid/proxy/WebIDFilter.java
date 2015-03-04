@@ -100,6 +100,7 @@ public class WebIDFilter implements Filter {
                     + " (" + httpRequest.getHeader("Host") + ") " + httpRequest.getMethod() + " " + httpRequest.getRequestURI());
 
             try {
+                // FIXME do we verify if the certificate has expired / perform other checks? (according to WebID-spec)
                 String[] webIdUris = extractWebIdUris((X509Certificate[]) httpRequest.getAttribute("javax.servlet.request.X509Certificate"));
                 for (String uri : webIdUris) {
                     log.log(LogService.LOG_INFO, "Found WebID: " + uri);
